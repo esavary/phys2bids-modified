@@ -363,6 +363,11 @@ def load_acq(filename, chtrig=0):
 
     freq = [data[0].samples_per_second]
     timeseries = [data[0].time_index]
+
+    patch_dwi_0=[0]*9999999
+    first_non_zero_index = np.argmax(data[chtrig].data != 0)
+    data[chtrig].data[first_non_zero_index+1:first_non_zero_index+10000000]=patch_dwi_0 #+1 to keep the first trigger
+
     units = ["s"]
     names = ["time"]
 
