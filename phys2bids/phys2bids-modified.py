@@ -38,10 +38,10 @@ import numpy as np
 from phys2bids import _version, bids, utils, viz
 from phys2bids.cli.run import _get_parser
 from phys2bids.physio_obj import BlueprintOutput
-from phys2bids.slice4phys import slice4phys
+from slice4physmodified import slice4phys
 
-from . import __version__
-from .due import Doi, due
+#from . import __version__
+#from .due import Doi, due
 
 LGR = logging.getLogger(__name__)
 LGR.setLevel(logging.INFO)
@@ -115,7 +115,7 @@ def print_json(outfile, samp_freq, time_offset, ch_name):
     summary = dict(SamplingFrequency=samp_freq, StartTime=round(start_time, 4), Columns=ch_name)
     utils.write_json(outfile, summary, indent=4, sort_keys=False)
 
-
+'''
 @due.dcite(
     Doi("10.5281/zenodo.3470091"),
     path="phys2bids",
@@ -129,6 +129,7 @@ def print_json(outfile, samp_freq, time_offset, ch_name):
     description="The BIDS specification",
     cite_module=True,
 )
+'''
 def phys2bids(
     filename,
     info=False,
@@ -245,11 +246,10 @@ def phys2bids(
     # Read file!
     LGR.info(f"Reading the file {infile}")
     if ftype == "acq":
-        from phys2bids.io import load_acq
-
+        from iomodified import load_acq #change
         phys_in = load_acq(infile, chtrig)
     elif ftype == "txt":
-        from phys2bids.io import load_txt
+        from io import load_txt
 
         phys_in = load_txt(infile, chtrig)
     elif ftype == "mat":

@@ -10,6 +10,7 @@ from itertools import groupby
 import numpy as np
 
 from phys2bids.physio_obj import BlueprintInput
+print('import modified io')
 
 LGR = logging.getLogger(__name__)
 OPEN_ISSUE = (
@@ -360,17 +361,30 @@ def load_acq(filename, chtrig=0):
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         data = read_file(filename).channels
+    print('cutting files')
+
+    '''
+    patch_dwi_0=[0]*9999960
+    first_non_zero_index = np.argmax(data[chtrig-1].data != 0)
+    data[chtrig-1].data[first_non_zero_index+40:first_non_zero_index+10000000]=patch_dwi_0 #+1 to keep the first trigger
+    '''
+
+    #copy the ET channel in the last
+    data[10].data[:] = data[4].data[:]
+    #filter the original ET channel to have only the triggers at the beginning of the tasks
+    ET_normalized=data[4].data
+    ET_normalized[ET_normalized > 0] = 1
+    trigger_deltas = np.diff(ET_normalized)
+    onsets_indexes = np.argwhere(trigger_deltas > 0)
+    onsets = onsets_indexes.flatten()
+    for i in [0,1,2,4,6,8,10]:
+        data[4].data[onsets[i]:onsets[i] + 60] = 0
 
     freq = [data[0].samples_per_second]
     timeseries = [data[0].time_index]
-
-    patch_dwi_0=[0]*9999999
-    first_non_zero_index = np.argmax(data[chtrig].data != 0)
-    data[chtrig].data[first_non_zero_index+1:first_non_zero_index+10000000]=patch_dwi_0 #+1 to keep the first trigger
-
     units = ["s"]
     names = ["time"]
-
+    print(freq, "frequency")
     for k, ch in enumerate(data):
         LGR.info(f"{k:02d}. {ch}")
         timeseries.append(ch.data)

@@ -6,7 +6,7 @@ from copy import deepcopy
 import numpy as np
 
 LGR = logging.getLogger(__name__)
-
+print('import slice4physmodified')
 
 def find_takes(phys_in, ntp_list, tr_list, thr=None, padding=9):
     """
@@ -17,7 +17,7 @@ def find_takes(phys_in, ntp_list, tr_list, thr=None, padding=9):
     timestamps of take in nb of samples. Timestamps are the index of first and
     last triggers of a take, adjusted with padding. take_start and take_end
     indexes refer to the samples contained in the whole session.
-    First trigger time offset and nb of triggers contained in the take are also indicated.
+    First trigger time offset and nb of triggers contained in the take are also indicated., and
 
     Parameters
     ---------
@@ -46,30 +46,38 @@ def find_takes(phys_in, ntp_list, tr_list, thr=None, padding=9):
     take_timestamps = {}
 
     # Express the padding in samples equivalent
-    padding_fr = padding * phys_in.freq[0]
+    padding_fr = padding *phys_in.freq[0]
+    print(phys_in.freq[0],'frequency used in split')
 
     # enumerate user input  num_timepoints_expected
     for take_idx, take_tps in enumerate(ntp_list):
         # correct time offset for this iteration's object
+        print()
         phys_in.check_trigger_amount(
             thr=thr, num_timepoints_expected=take_tps, tr=tr_list[take_idx]
         )
         # If it's the very first take, start the take at sample 0,
         # otherwise start is first trigger (adjust with padding later)
         if take_idx == 0:
+            print('first take')
             take_start = 0
         else:
+            print('second take')
             take_start = int(np.where(np.isclose(phys_in.timeseries[0], 0))[0])
+
 
         # Defining end of acquisition
         # take length in seconds
         end_sec = take_tps * tr_list[take_idx]
+        print('end of task',end_sec)
 
         # define index of the take's last trigger + padding (HAS TO BE INT type)
         # pick first value of time array that is over specified take length
         # where returns list of values over end_sec and its dtype, choose [list][first value]
         # Check if end_sec is above the end of the timeseries (it happens for noisy cases)
         if phys_in.timeseries[0][-1] > end_sec:
+            print('padding',padding_fr)
+            print('end time serie',phys_in.timeseries[0][-1])
             take_end = int(np.where(phys_in.timeseries[0] > end_sec)[0][0] + padding_fr)
         else:
             take_end = int(phys_in.timeseries[0].shape[0] - 1)
@@ -84,6 +92,7 @@ def find_takes(phys_in, ntp_list, tr_list, thr=None, padding=9):
         # if the padding is too much for the remaining timeseries length
         # then the padding stops at the end of recording
         if phys_in.timeseries[0].shape[0] < take_end:
+            print('padding too long')
             take_end = phys_in.timeseries[0].shape[0]
 
         # Adjust timestamps with previous end_index
